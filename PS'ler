@@ -1,0 +1,47 @@
+Forest information -> 										                Get-ADForest | Format-List Name,Domains,RootDomain,ForestMode
+Domain information -> 										                Get-ADDomain | Select-Object ChildDomains,ComputersContainer,DeletedObjectsContainer,DistinguishedName,DNSRoot,DomainControllersContainer,DomainMode,DomainSID,Forest,Name,NetBIOSName,ParentDomain,ReadOnlyReplicaDirectoryServers,UsersContainer 
+List all Domain Controller -> 								            Get-ADDomainController -Filter * | Select-Object Name,IPv4Address,IsGlobalCatalog,OperatingSystem
+DC olmayan Computer Accountlarının DC OU'sunda olması -> 	Get-ADComputer -Filter * -SearchBase "OU=Domain Controllers,DC=lab,DC=local" | Select-Object Name
+DC olan sunucuların DC OU'sunda olmaması -> 				      Get-ADDomainController -Filter * | Select-Object Name,ComputerObjectDN
+Replikasyonlar FSRM mi ? DFSR mi ? -> 						        dfsrmig /getglobalstate (resim bul)
+FSMO Roles ->     											                  netdom query /fsmo
+NTP Kontrolü -> 											                    w32tm /query /status
+RecycleBin is enabled ? -> 									              Get-ADOptionalFeature "Recycle Bin Feature"
+															                            // EnabledScopes dolu olmalı | https://blogs.technet.microsoft.com/askds/2009/08/27/the-ad-recycle-bin-understanding-implementing-best-practices-and-troubleshooting/
+RecycleBin lifetime -> 										                Get-ADObject "CN=Directory Service,CN=Windows NT,CN=Services,CN=Configuration,DC=lab,DC=local" –Properties TombstoneLifeTime
+TombStone lifetime -> 										                (Get-ADObject -Identity “CN=Directory Service,CN=Windows NT,CN=Services,$((Get-ADRootDSE).configurationNamingContext)” -Properties tombstoneLifetime).tombstoneLifetime
+all user -> 												                      (Get-ADObject -ldapfilter '(&(objectcategory=person)(objectclass=user))').count
+inactive user (6 ay)										                  Search-ADAccount -accountinactive -usersonly | Where-Object {$_.lastlogondate -lt (get-date).addmonths(-6)} | Sort-Object LastLogonDate | ft name,LastLogonDate
+Disable User Account ->										                (Get-ADUser -Filter * -Property Enabled | ? {$_.Enabled -eq $false}).Count
+all computer -> 											                    (Get-ADObject -ldapfilter '(&(objectcategory=computer)(objectclass=computer))').Count
+inactive computer (6 ay) -> 								              Search-ADAccount -accountinactive -computersonly | where {$_.lastlogondate -lt (get-date).addmonths(-6)} | sort LastLogonDate | FT Name,LastLogonDate
+Disable Computer Account -> 								              Get-ADComputer -Filter {Enabled -eq $false} | select Name,Enabled > c:\ADHC\disableccomputers.txt
+Bad Pw Users List -> 										                  Get-ADUser -Filter * -ResultSetSize $null -Properties BadLogonCount |?{$_.BadLogonCount -gt 1} | Sort-Object BadLogonCount -Descending | select Name,BadLogonCount
+Silinmeye karşı korunmamış OU'lar -> 						          Get-ADOrganizationalUnit -Filter * -Properties ProtectedFromAccidentalDeletion | ?{$_.ProtectedFromAccidentalDeletion -eq $false} | ft Name,ProtectedFromAccidentalDeletion
+pw never expire -> 											                  Get-ADUser -filter * -properties Name, PasswordNeverExpires | where {$_.passwordNeverExpires -eq "true" } | Select-Object  Name,Enabled
+user cannot change pw -> 									                Get-ADUser -Filter * -Properties * | where {$_.CannotChangePassword } | Format-Table Name,Enabled
+Domain Admin members -> 									                Get-ADGroupMember -Identity "Domain Admins" | Select-Object Name,objectClass
+Enterprise Admins members ->								              Get-ADGroupMember -Identity "Enterprise Admins" | Select-Object Name,objectClass
+Schema Admin members -> 									                Get-ADGroupMember -Identity "Schema Admins" | Select-Object Name,objectClass
+Password Policy -> 											                  Get-ADDefaultDomainPasswordPolicy
+admincount 1 user list ->									                Get-ADuser -LDAPFilter “(admincount=1)” | select name
+admincount 1 groups list -> 								              Get-ADgroup -LDAPFilter “(admincount=1)” | select name
+DC lerde Windows activasyonu kontrolü ->					        Get-CimInstance -ClassName SoftwareLicensingProduct | ? {$_.PartialProductKey} | select Description, LicenseStatus
+															                            //https://docs.microsoft.com/en-us/previous-versions/windows/desktop/sppwmi/softwarelicensingproduct?redirectedfrom=MSDN
+KMS var mı ?  -> 											                    nslookup -type=all _vlmcs._tcp
+Varsa DC üzerinde ki rollerin incelenmesi,-> 				      Get-WindowsFeature | ?{$_.InstallState -eq "Installed"} | ft Name,InstallState
+Computer account OS dağılımı -> 							            $OSList = Get-ADComputer -Filter * -ResultSetSize $null -Properties OperatingSystem | select OperatingSystem -Unique
+
+															                            $OSList | % {
+															                            $OS = $_.OperatingSystem
+															                            if($OS -ne $null){
+															                            $cmpList = Get-ADComputer -Filter{OperatingSystem -eq $OS} -Properties OperatingSystem
+															                            $cmpListCount = $cmpList.count
+															                            Write-Host $OS - $cmpListCount}
+															                            $OS = $null
+															                            $cmpList = $null
+															                            $cmpListCount = $null}
+DC lerin DNS bilgileri -> 									              Get-DnsClientServerAddress -AddressFamily IPV4 | ?{$_.InterfaceAlias -notlike "isatap*" -and $_.InterfaceAlias -notlike "Loop*"}
+															                            Get-NetIPAddress -InterfaceIndex X -AddressFamily IPv4 | select IPAddress
+DC ler üzerinde low disk check ->							            Get-WmiObject Win32_LogicalDisk -ComputerName $env:COMPUTERNAME | select DeviceID,@{N="Size(GB)";E={($_.Size / 1GB).tostring("#.#")}},@{N="FreeSpace(GB)";E={($_.FreeSpace / 1GB).tostring("#.#")}},@{N="Usage(%)";E={(100*($_.size-$_.FreeSpace)/$_.Size).tostring("#.#")}}
+
