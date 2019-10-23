@@ -1,0 +1,10 @@
+repadmin /replsummary
+repadmin /syncall /Aped
+Repadmin /showbackup *
+Repadmin /showrepl *
+Repadmin / queue *
+repadmin /showoutcalls *
+repadmin /bridgeheads * /verbose
+repadmin /failcache *
+Repadmin /showtrust *
+dcdiag /c /e /v
