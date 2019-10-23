@@ -1,0 +1,4 @@
+Import-module BestPractices
+$BPA = "Microsoft/Windows/DirectoryServices"
+Invoke-BPAModel -BestPracticesModelId $BPA -ErrorAction SilentlyContinue
+Get-BPAResult -ModelID $BPA -ErrorAction SilentlyContinue |Where-Object {$_.Problem -ne $Null} |Select-Object ResultNumber,Severity,Category,Title,Problem,Impact,Resolution |Export-Csv "c:\ADDS_BPA.csv" -NoTypeInformation -Encoding UTF8
