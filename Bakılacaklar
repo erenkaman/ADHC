@@ -10,3 +10,14 @@ Eskiden kalma DC lerin DNS lerde kalıntısı var mı ?
 Stric replikasyon kontrolü (açılma önerisi ),
 Lingering object kontrolü
 Local Adminlerin üzerine yazan policy
+
+•	Orphaned olan  objelerin gereksiz olarak replikasyonun engellenmesi için Strict Replication Consistency ayarının yapılmasını 
+önermektedir. İlgili makaleye aşağıdaki linkten ulaşılabilmektedir.
+Strict replication consistency should be enabled on all domain controllers in this forest
+http://technet.microsoft.com/en-us/library/dd723692(v=ws.10).aspx
+
+
+•	Domain Controller’lar üzerinde bulunan Audit ile ilgili ayarlar aşağıda belirtilen şekilde yapılmıştır. 
+Bu loglar DC’ler üzerinde toplanmaktadır. Log uzunluğu ise 2 GB olacak şekilde ayarlanmış ve toplanan log’lar kurum 
+tarafından yazılan  bir agent aracılığıyla merkezde bulunan bir SQL Database’ine yazılmaktadır. Domain Controller üzerindeki 
+loglar 2 GB’a ulaştığında üzerine yazmaya başlayacaktır.
