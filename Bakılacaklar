@@ -1,0 +1,12 @@
+DC lerde ki Forwarder serverlar,
+Site and Services incelemesi (subnet, rep link etc.)
+DC ler üzerinde user profile kontrolü,
+Varsa trust üzerinde account kontrolü,
+DNS aging scavenging kontrolü, (resimi çalık raporundan al)
+Active Directory Backup ‘ının “System State” olarak alınması ve belirli periyodlar da restore testi yapılması.
+Computer Notasyonları
+Metadata kontrolü
+Eskiden kalma DC lerin DNS lerde kalıntısı var mı ? 
+Stric replikasyon kontrolü (açılma önerisi ),
+Lingering object kontrolü
+Local Adminlerin üzerine yazan policy
